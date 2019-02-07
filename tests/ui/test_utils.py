@@ -87,7 +87,7 @@ def test_is_muted(mocker, msg, narrow, muted_streams, muted_topics, muted):
 
 
 @pytest.mark.parametrize('narrow, index, messages, focus_msg_id, muted,\
-                         len_w_list', [
+                         stream_details, pm_details, len_w_list', [
     (
         # No muted messages
         [],
@@ -110,6 +110,8 @@ def test_is_muted(mocker, msg, narrow, muted_streams, muted_topics, muted):
         None,
         None,
         False,
+        None,
+        None,
         2,
     ),
     (
@@ -134,6 +136,8 @@ def test_is_muted(mocker, msg, narrow, muted_streams, muted_topics, muted):
         [1],
         None,
         False,
+        None,
+        None,
         1,
     ),
     (
@@ -158,11 +162,51 @@ def test_is_muted(mocker, msg, narrow, muted_streams, muted_topics, muted):
         [1],
         None,
         True,
+        None,
+        None,
         0,
+    ),
+    (
+        # Displays dummy stream message
+        [['stream', 'foo']],
+        {
+            'all_messages': {1, 2},
+            'messages': {},
+            'pointer': {}
+        },
+        [],
+        None,
+        False,
+        {
+            'caption': 'Boo',
+            'description': 'News about Boo',
+            'subject': 'Boo is hungry'
+        },
+        None,
+        1,
+    ),
+    (
+        # Displays dummy private message
+        [['pm_with', 'boo@zulip.com']],
+        {
+            'all_messages': {1, 2},
+            'messages': {},
+            'pointer': {}
+        },
+        [],
+        None,
+        False,
+        None,
+        {
+            'caption': 'Boo Boo',
+            'recipient_email': 'bar@zulip.com',
+            'sender_id': 8
+        },
+        1,
     )
 ])
 def test_create_msg_box_list(mocker, narrow, index,  messages, focus_msg_id,
-                             muted, len_w_list):
+                             muted, stream_details, pm_details, len_w_list):
     model = mocker.Mock()
     model.narrow = narrow
     model.index = index
@@ -170,5 +214,7 @@ def test_create_msg_box_list(mocker, narrow, index,  messages, focus_msg_id,
     mocker.patch('zulipterminal.ui_tools.utils.urwid.AttrMap',
                  return_value='MSG')
     mocker.patch('zulipterminal.ui_tools.utils.is_muted', return_value=muted)
-    return_value = create_msg_box_list(model, messages, focus_msg_id)
+    return_value = create_msg_box_list(model, messages, focus_msg_id,
+                                       stream_details=stream_details,
+                                       pm_details=pm_details)
     assert len(return_value) == len_w_list
