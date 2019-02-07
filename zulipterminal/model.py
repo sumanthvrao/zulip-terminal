@@ -492,6 +492,28 @@ class Model:
                 last_message = self.msg_list.log[-1].original_widget.message
             else:
                 last_message = None
+            # Removing the dummy message when a new message comes
+            dummy_message_found = True
+            if self.msg_list.log:
+                possible_dummy_message = \
+                    self.msg_list.log[0].original_widget.message
+                if possible_dummy_message.get('id') is None:
+                    dummy_message_found = False
+                    if possible_dummy_message.get('type') == 'private' and \
+                            response.get('type') == 'private':
+                        if(possible_dummy_message.get('display_recipient')[0]
+                            ['email'] in [recipient['email'] for recipient
+                                          in response['display_recipient']]):
+                            dummy_message_found = True
+                            del self.msg_list.log[0]
+
+                    if possible_dummy_message.get('type') == 'stream' and \
+                            response.get('type') == 'stream':
+                        if possible_dummy_message.get('display_recipient') == \
+                                response['display_recipient']:
+                            dummy_message_found = True
+                            del self.msg_list.log[0]
+
             msg_w_list = create_msg_box_list(self, [response['id']],
                                              last_message=last_message)
             if not msg_w_list:
@@ -519,6 +541,9 @@ class Model:
                 ])
                 if recipients == msg_recipients:
                     self.msg_list.log.append(msg_w)
+
+            if(not dummy_message_found):
+                del self.msg_list.log[-1]
 
             set_count([response['id']], self.controller, 1)
             self.controller.update_screen()

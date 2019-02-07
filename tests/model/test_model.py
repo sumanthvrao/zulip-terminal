@@ -513,6 +513,51 @@ class TestModel:
         (create_msg_box_list.
          assert_called_once_with(model, [0], last_message=expected_last_msg))
 
+    @pytest.mark.parametrize('message', [
+        ({
+            'type': 'private',
+            'id': None,
+            'display_recipient': [{'email': 'x@zulip.com'}]
+        }),
+        ({
+            'type': 'stream',
+            'id': None,
+            'display_recipient': 'foo'
+        })
+    ])
+    @pytest.mark.parametrize('response, output', [
+        ({
+            'type': 'private',
+            'id': 0,
+            'display_recipient': [{'email': 'x@zulip.com'}]
+        }, 1),
+        ({
+            'type': 'stream',
+            'id': 0,
+            'display_recipient': 'foo'
+        }, 1),
+        ({
+            'type': 'private',
+            'id': 0,
+            'display_recipient': [{'email': 'y@zulip.com'}]
+        }, 1)
+    ])
+    def test_append_message_with_dummy_previous_message(self, mocker, model,
+                                                        message, response,
+                                                        output):
+        model.update = True
+        index_msg = mocker.patch('zulipterminal.model.index_messages',
+                                 return_value={})
+        model.msg_list = mocker.Mock()
+        create_msg_box_list = mocker.patch('zulipterminal.model.'
+                                           'create_msg_box_list',
+                                           return_value=["msg_w"])
+        model.msg_list.log = [mocker.Mock()]
+        model.msg_list.log[0].original_widget.message = message
+        event = {'message': response}
+        model.append_message(event)
+        assert len(model.msg_list.log) == output
+
     @pytest.mark.parametrize('response, narrow, recipients, log', [
         ({'type': 'stream', 'id': 1}, [], frozenset(), ['msg_w']),
         ({'type': 'private', 'id': 1},
