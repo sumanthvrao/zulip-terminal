@@ -847,9 +847,17 @@ class TestMessageBox:
     ])
     def test_init(self, mocker, message_type, set_fields):
         mocker.patch.object(MessageBox, 'main_view')
-        message = dict(display_recipient=['x'], stream_id=5, subject='hi',
-                       sender_email='foo@zulip.com', sender_id=4209,
-                       type=message_type)
+        message = dict(display_recipient=[
+            {
+                'id': 7,
+                'email': 'x@zulip.com',
+                'full_name': 'x is awesome'
+            }],
+            stream_id=5,
+            subject='hi',
+            sender_email='foo@zulip.com',
+            sender_id=4209,
+            type=message_type)
 
         msg_box = MessageBox(message, self.model, None)
 
@@ -1077,6 +1085,52 @@ class TestMessageBox:
         assert view_components[0].get_attr() == 'bar'
         assert isinstance(view_components[1], Columns)
         assert isinstance(view_components[2], Padding)
+
+    @pytest.mark.parametrize('message', [
+        ({
+            'type': 'stream',
+            'display_recipient': 'foo',
+            'stream_id': 8,
+            'subject': 'disription about foo',
+        }),
+        ({
+            'type': 'private',
+            'display_recipient': [{'full_name': 'Iago',
+                                   'email': 'iago@zulip.com',
+                                   'id': None}],
+            'sender_id': 9,
+        })
+    ])
+    def test_dummy_message(self, mocker, message):
+        self.model.stream_dict = {
+            8: {
+                'color': '#bfd56f',
+            },
+        }
+        message.update({
+            'content': "<p> Dummy stream/PM message. </p>",
+            'sender_full_name': 'Welcome Bot',
+            'sender_email': 'welcome-bot@zulip.com',
+            'timestamp': 150989984,
+            'id': None,
+            'reactions': [],
+            'flags': ['read']
+            })
+        # Border case with self_message
+        self.model.user_id = 'iago@zulip.com'
+        last_message = None
+        msg_box = MessageBox(message, self.model, last_message,
+                             is_empty_narrow=True)
+        view_components = msg_box.main_view()
+        assert len(view_components) == 3
+        # Extracting label from header.
+        header = view_components[0].original_widget.get_text()[0].strip()
+        if message['type'] == 'private':
+            pm_header = header.split(':')[1].strip()
+            assert pm_header == 'Iago'
+        else:
+            stream_header = header.split('>')[0].strip()
+            assert stream_header == 'foo'
 
     # Assume recipient (PM/stream/topic) header is unchanged below
     @pytest.mark.parametrize('message', [

@@ -117,13 +117,14 @@ class WriteBox(urwid.Pile):
 
 class MessageBox(urwid.Pile):
     def __init__(self, message: Dict[str, Any], model: Any,
-                 last_message: Any) -> None:
+                 last_message: Any, is_empty_narrow: bool=False) -> None:
         self.model = model
         self.message = message
         self.caption = ''
         self.stream_id = None  # type: Union[int, None]
         self.title = ''
         self.email = ''
+        self.is_in_empty_narrow = is_empty_narrow
         self.user_id = None  # type: Union[int, None]
         self.last_message = last_message
         # if this is the first message
@@ -146,6 +147,8 @@ class MessageBox(urwid.Pile):
         return ctime(message['timestamp'])[:-8]
 
     def need_recipient_header(self) -> bool:
+        if self.is_in_empty_narrow:
+            return True
         last_msg = self.last_message
         if self.message['type'] == 'stream':
             if (last_msg['type'] == 'stream' and
@@ -167,6 +170,12 @@ class MessageBox(urwid.Pile):
         else:
             raise RuntimeError("Invalid message type")
 
+    def _is_private_message_to_self(self) -> bool:
+        recipient_list = self.message['display_recipient']
+        return len(recipient_list) == 1 and \
+            recipient_list[0]['email'] == \
+            self.model.user_email
+
     def stream_header(self) -> Any:
         bar_color = self.model.stream_dict[self.stream_id]['color']
         bar_color = 's' + bar_color[:2] + bar_color[3] + bar_color[5]
@@ -180,10 +189,13 @@ class MessageBox(urwid.Pile):
         return header
 
     def private_header(self) -> Any:
-        self.recipients = ', '.join(list(
-            recipient['full_name']
-            for recipient in self.message['display_recipient']
-            if recipient['email'] != self.model.user_email
+        if self._is_private_message_to_self():
+            self.recipients = self.message['display_recipient'][0]['full_name']
+        else:
+            self.recipients = ', '.join(list(
+                recipient['full_name']
+                for recipient in self.message['display_recipient']
+                if recipient['email'] != self.model.user_email
         ))
         title_markup = ('header', [
             ('custom', 'Private Messages with'),
@@ -418,11 +430,14 @@ class MessageBox(urwid.Pile):
 
     def get_recipients(self) -> str:
         emails = []
-        for recipient in self.message['display_recipient']:
-            email = recipient['email']
-            if email == self.model.user_email:
-                continue
-            emails.append(recipient['email'])
+        if self._is_private_message_to_self():
+            emails.append(self.model.user_email)
+        else:
+            for recipient in self.message['display_recipient']:
+                email = recipient['email']
+                if email == self.model.user_email:
+                    continue
+                emails.append(recipient['email'])
         return ', '.join(emails)
 
     def keypress(self, size: Tuple[int, int], key: str) -> str:
@@ -457,11 +472,13 @@ class MessageBox(urwid.Pile):
                 self.model.controller.narrow_to_topic(self)
         elif is_command_key('GO_BACK', key):
             self.model.controller.show_all_messages(self)
-        elif is_command_key('REPLY_AUTHOR', key):
+        elif is_command_key('REPLY_AUTHOR', key) and \
+                not self.is_in_empty_narrow:
             self.model.controller.view.write_box.private_box_view(
                 email=self.message['sender_email']
             )
-        elif is_command_key('MENTION_REPLY', key):
+        elif is_command_key('MENTION_REPLY', key) and \
+                not self.is_in_empty_narrow:
             self.keypress(size, 'enter')
             mention = '@**' + self.message['sender_full_name'] + '** '
             self.model.controller.view.write_box.msg_write_box.set_edit_text(
@@ -469,7 +486,8 @@ class MessageBox(urwid.Pile):
             self.model.controller.view.write_box.msg_write_box.set_edit_pos(
                 len(mention))
             self.model.controller.view.middle_column.set_focus('footer')
-        elif is_command_key('QUOTE_REPLY', key):
+        elif is_command_key('QUOTE_REPLY', key) and \
+                not self.is_in_empty_narrow:
             self.keypress(size, 'enter')
             quote = '```quote\n' + self.model.client.get_raw_message(
                 self.message['id'])['raw_content'] + '\n```\n'
