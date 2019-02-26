@@ -158,7 +158,7 @@ def test_is_muted(mocker, msg, narrow, muted_streams, muted_topics, muted):
         [1],
         None,
         True,
-        0,
+        1,
     )
 ])
 def test_create_msg_box_list(mocker, narrow, index,  messages, focus_msg_id,
