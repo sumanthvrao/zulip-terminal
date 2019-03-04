@@ -27,27 +27,37 @@ class TopButton(urwid.Button):
         self.text_color = text_color
         self.show_function = show_function
         super().__init__("")
-        self._w = self.widget(count)
+        self._w = self.widget(count, False)
         self.controller = controller
         self.set_muted_streams()
         urwid.connect_signal(self, 'click', self.activate)
 
     def set_muted_streams(self) -> None:
-        if self.caption in [self.controller.model.stream_dict[ele]['name']
-                            for ele in self.controller.model.muted_streams]:
-            self.update_count(-1)
+        for stream_id in self.controller.model.muted_streams:
+            if self.caption == self.controller.model.stream_dict[stream_id]['name']:
+                unread_msg_counts = self.controller.model.initial_data['unread_msgs']
+                for stream in unread_msg_counts['streams']:
+                    if stream['stream_id'] == stream_id:
+                        self.update_count(len(stream['unread_message_ids']), True)
+                        break
+                else:
+                    self.update_count(0, True)
 
-    def update_count(self, count: int) -> None:
+    def update_count(self, count: int, is_muted: bool) -> None:
         self.count = count
-        self._w = self.widget(count)
+        self._w = self.widget(count, is_muted)
 
-    def widget(self, count: int) -> Any:
-        if count < 0:
-            count_text = 'M'  # Muted
-        elif count == 0:
-            count_text = ''
+    def widget(self, count: int, is_muted: bool) -> Any:
+        if is_muted:
+            if count <= 0:
+                count_text = 'M'
+            else:
+                count_text = str(count)+' M'  # Muted
         else:
-            count_text = str(count)
+            if count == 0:
+                count_text = ''
+            else:
+                count_text = str(count)
 
         # Shrink text, but always require at least one space
         max_caption_length = (self.width_for_text_space_count -

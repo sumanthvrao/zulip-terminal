@@ -108,22 +108,24 @@ def set_count(id_list: List[int], controller: Any, new_count: int) -> None:
         add_to_counts = True
         if msg_type == 'stream':
             stream_id = messages[id]['stream_id']
-            if stream_id in controller.model.muted_streams:
-                add_to_counts = False  # if muted, don't add to eg. all_msg
-            else:
-                for stream in streams:
-                    if stream.stream_id == stream_id:
-                        stream.update_count(stream.count + new_count)
+            for stream in streams:
+                if stream.stream_id == stream_id:
+                    if stream_id in controller.model.muted_streams:
+                        stream.update_count(stream.count + new_count, True)
+                        add_to_counts = False  # if muted, don't add to eg. all_msg
+                        break
+                    else:
+                        stream.update_count(stream.count + new_count, False)
                         break
         else:
             for user in users:
                 if user.user_id == user_id:
-                    user.update_count(user.count + new_count)
+                    user.update_count(user.count + new_count, False)
                     break
-            all_pm.update_count(all_pm.count + new_count)
+            all_pm.update_count(all_pm.count + new_count, False)
 
         if add_to_counts:
-            all_msg.update_count(all_msg.count + new_count)
+            all_msg.update_count(all_msg.count + new_count, False)
 
     while not hasattr(controller, 'loop'):
         time.sleep(0.1)
@@ -289,7 +291,6 @@ def index_messages(messages: List[Any],
 def classify_unread_counts(model: Any) -> UnreadCounts:
     # TODO: support group pms
     unread_msg_counts = model.initial_data['unread_msgs']
-
     unread_counts = UnreadCounts(
         all_msg=0,
         all_pms=0,
@@ -319,7 +320,6 @@ def classify_unread_counts(model: Any) -> UnreadCounts:
         else:
             unread_counts['streams'][stream_id] += count
         unread_counts['all_msg'] += count
-
     return unread_counts
 
 

@@ -495,6 +495,7 @@ class Model:
             msg_w_list = create_msg_box_list(self, [response['id']],
                                              last_message=last_message)
             if not msg_w_list:
+                set_count([response['id']], self.controller, 1)
                 return
             else:
                 msg_w = msg_w_list[0]
