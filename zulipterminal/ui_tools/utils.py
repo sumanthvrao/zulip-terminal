@@ -13,6 +13,8 @@ def create_msg_box_list(model: Any, messages: Union[None, Iterable[Any]]=None,
     """
     if not model.narrow and messages is None:
         messages = list(model.index['all_messages'])
+    if len(model.narrow) == 1 and model.narrow[0][1] == 'private':
+        messages = list(model.index['all_private'])
     if messages is not None:
         message_list = [model.index['messages'][id] for id in messages]
     message_list.sort(key=lambda msg: msg['timestamp'])

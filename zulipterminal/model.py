@@ -77,7 +77,7 @@ class Model:
 
         self.msg_view = None  # type: Any
         self.msg_list = None  # type: Any
-        self.narrow = []  # type: List[Any]
+        self.narrow = [['is', 'private']]  # type: List[Any]
         self.update = False
         self.stream_id = -1
         self.recipients = frozenset()  # type: FrozenSet[Any]

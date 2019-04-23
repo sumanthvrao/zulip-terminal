@@ -508,8 +508,8 @@ class LeftColumnView(urwid.Pile):
                                                  width=self.width)
 
         menu_btn_list = [
-            self.view.home_button,
             self.view.pm_button,
+            self.view.home_button,
             self.view.starred_button,
         ]
         w = urwid.ListBox(urwid.SimpleFocusListWalker(menu_btn_list))
