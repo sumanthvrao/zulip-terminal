@@ -233,6 +233,20 @@ class Model:
         else:
             response = self.client.add_reaction(reaction_to_toggle_spec)
 
+    def toggle_stream_muted_status(self, button: Any) -> None:
+        stream_id = button.stream_id
+        request = [{
+            'stream_id': stream_id,
+            'property': 'is_muted',
+            'value': True if stream_id not in self.muted_streams
+            else False
+        }]
+        response = self.client.update_subscription_settings(request)
+        if request[0]['value']:
+            self.muted_streams.add(stream_id)
+        else:
+            self.muted_streams.remove(stream_id)
+
     @asynch
     def toggle_message_star_status(self, message: Dict[str, Any]) -> None:
         base_request = dict(flag='starred', messages=[message['id']])

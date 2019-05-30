@@ -131,6 +131,11 @@ class StreamButton(TopButton):
                          width=width,
                          count=count)
 
+    def keypress(self, size: Tuple[int, int], key: str) -> str:
+        if is_command_key('TOGGLE_MUTE', key):
+            self.controller.model.toggle_stream_muted_status(self)
+        return super().keypress(size, key)
+
 
 class UserButton(TopButton):
     def __init__(self, user: Dict[str, Any], controller: Any,
