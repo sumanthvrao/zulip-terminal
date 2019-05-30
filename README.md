@@ -99,6 +99,7 @@ autohide=autohide
 | Search People                                         | <kbd>w</kbd>                                  |
 | Search Messages                                       | <kbd>/</kbd>                                  |
 | Search Streams                                        | <kbd>q</kbd>                                  |
+| Mute/Unmute Streams                                   | <kbd>m</kbd>                                  |
 | Add/remove thumbs-up reaction to the current message  | <kbd>+</kbd>                                  |
 | Add/remove star status of the current message         | <kbd>*</kbd>                                  |
 | Jump to the Beginning of line                         | <kbd>Ctrl</kbd> + <kbd>A</kbd>                |

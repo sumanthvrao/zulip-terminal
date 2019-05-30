@@ -120,6 +120,10 @@ KEY_BINDINGS = OrderedDict([
         'keys': {'q'},
         'help_text': 'Search Streams',
     }),
+    ('TOGGLE_MUTE', {
+        'keys': {'m'},
+        'help_text': 'Mute Streams'
+    }),
     ('ENTER', {
         'keys': {'enter'},
         'help_text': 'Perform current action',
