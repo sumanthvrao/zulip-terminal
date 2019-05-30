@@ -103,6 +103,9 @@ class Model:
         (self.stream_dict, self.muted_streams,
          self.pinned_streams, self.unpinned_streams) = stream_data
 
+        self.stream_name_to_id = {v['name']: k
+                                  for k, v in self.stream_dict.items()}
+
         self.muted_topics = self.initial_data['muted_topics']
         self.unread_counts = classify_unread_counts(self)
 

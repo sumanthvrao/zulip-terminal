@@ -29,13 +29,24 @@ class TopButton(urwid.Button):
         super().__init__("")
         self._w = self.widget(count)
         self.controller = controller
+        self.model = controller.model
         self.set_muted_streams()
         urwid.connect_signal(self, 'click', self.activate)
 
     def set_muted_streams(self) -> None:
-        if self.caption in [self.controller.model.stream_dict[ele]['name']
-                            for ele in self.controller.model.muted_streams]:
+        if self.caption in [self.model.stream_dict[ele]['name']
+                            for ele in self.model.muted_streams]:
             self.update_count(-1)
+        else:
+            if self.caption in self.model.stream_name_to_id.keys():
+                stream_id = self.model.stream_name_to_id[self.caption]
+                if stream_id in self.model.unread_counts['streams'].keys():
+                    unmuted_count = \
+                        self.model.unread_counts['streams'][stream_id]
+                    self.update_count(unmuted_count)
+                else:
+                    # All messages in the stream are read.
+                    self.update_count(0)
 
     def update_count(self, count: int) -> None:
         self.count = count
@@ -75,6 +86,9 @@ class TopButton(urwid.Button):
     def keypress(self, size: Tuple[int, int], key: str) -> str:
         if is_command_key('ENTER', key):
             self.activate(key)
+        if is_command_key('TOGGLE_MUTE', key):
+            self.set_muted_streams()
+            self.controller.update_screen()
         return super().keypress(size, key)
 
 
