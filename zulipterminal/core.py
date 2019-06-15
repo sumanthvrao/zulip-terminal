@@ -1,5 +1,5 @@
 from platform import platform
-from typing import Any, List
+from typing import Any, List, Optional
 import os
 import sys
 import time
@@ -24,7 +24,7 @@ class Controller:
     """
 
     def __init__(self, config_file: str, theme: ThemeSpec,
-                 autohide: bool) -> None:
+                 autohide: bool, exit_on_startup: bool) -> None:
         self.theme = theme
         self.autohide = autohide
         self.editor_mode = False  # type: bool
@@ -36,6 +36,7 @@ class Controller:
                                           format(ZT_VERSION, platform()))
         self.model = Model(self)
         self.view = View(self)
+        self.exit_on_startup = exit_on_startup
         # Start polling for events after view is rendered.
         self.model.poll_for_events()
 
@@ -271,7 +272,10 @@ class Controller:
         self.deregister_client()
         sys.exit(0)
 
-    def main(self) -> None:
+    def main(self) -> Optional[float]:
+        if self.exit_on_startup:
+            self.restore_stdout()
+            return time.time()
         screen = Screen()
         screen.set_terminal_properties(colors=256)
         self.loop = urwid.MainLoop(self.view,
@@ -299,3 +303,5 @@ class Controller:
         finally:
             self.restore_stdout()
             screen.tty_signal_keys(*old_signal_list)
+
+        return None

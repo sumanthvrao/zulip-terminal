@@ -33,7 +33,8 @@ def test_main_help(capsys, options):
         '-d, --debug',
         '--profile',
         '--config-file CONFIG_FILE, -c CONFIG_FILE',
-        '-v, --version'
+        '-v, --version',
+        '--startup-test'
     }
     optional_argument_lines = {line[2:] for line in lines
                                if len(line) > 2 and line[2] == '-'}

@@ -4,6 +4,7 @@ import traceback
 import sys
 import logging
 import requests
+import time
 from typing import Dict, Any, List, Optional, Tuple
 from os import path, remove
 
@@ -62,6 +63,11 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
                         action='store_true',
                         default=False,
                         help='Print zulip-terminal version and exit')
+
+    parser.add_argument('--startup-test', dest='startup_test',
+                        action='store_true',
+                        default=False,
+                        help='Print startup time of zulip-terminal')
 
     return parser.parse_args(argv)
 
@@ -193,6 +199,12 @@ def main(options: Optional[List[str]]=None) -> None:
     else:
         zuliprc_path = '~/zuliprc'
 
+    if args.startup_test:
+        time_begin = time.time()
+        exit_on_startup = True
+    else:
+        exit_on_startup = False
+
     try:
         zterm = parse_zuliprc(zuliprc_path)
 
@@ -233,9 +245,12 @@ def main(options: Optional[List[str]]=None) -> None:
                            format(", ".join(complete))))
         print("   autohide setting '{}' specified {}."
               .format(*zterm['autohide']))
-        Controller(zuliprc_path,
-                   THEMES[theme_to_use[0]],
-                   autohide_setting).main()
+        time_exit = Controller(zuliprc_path,
+                               THEMES[theme_to_use[0]],
+                               autohide_setting, exit_on_startup).main()
+        if time_exit:
+            print(" \nStartup time: {} seconds".format(time_exit - time_begin))
+
     except ServerConnectionFailure as e:
         print(in_color('red',
                        "\nError connecting to Zulip server: {}.".format(e)))
