@@ -136,6 +136,10 @@ KEY_BINDINGS = OrderedDict([
         'keys': {'ctrl c'},
         'help_text': 'Quit',
     }),
+    ('VIEW_IN_BROWSER', {
+        'keys': {'v'},
+        'help_text': 'View the current message in a web browser',
+    }),
 ])  # type: OrderedDict[str, KeyBinding]
 
 

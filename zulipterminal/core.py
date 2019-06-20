@@ -4,6 +4,9 @@ import os
 import sys
 import time
 import signal
+import webbrowser
+from contextlib import redirect_stderr, redirect_stdout, contextmanager
+import subprocess
 
 import urwid
 import zulip
@@ -16,6 +19,18 @@ from zulipterminal.ui_tools.utils import create_msg_box_list
 from zulipterminal.ui_tools.views import HelpView
 from zulipterminal.config.themes import ThemeSpec
 
+@contextmanager
+def subprocess_filehandles_to_devnull():
+    out = os.dup(1)
+    err = os.dup(2)
+    os.close(1)
+    os.close(2)
+    os.open(os.devnull, os.O_RDWR)
+    try:
+        yield
+    finally:
+        os.dup2(out, 1)
+        os.dup2(err, 2)
 
 class Controller:
     """
@@ -251,6 +266,11 @@ class Controller:
         w_list = create_msg_box_list(self.model, msg_id_list)
 
         self._finalize_show(w_list)
+
+    def view_in_browser(self, message_id: int) -> None:
+        with subprocess_filehandles_to_devnull():
+            url = '{}#narrow/near/{}'.format(self.model.server_url, message_id)
+            webbrowser.open(url)
 
     def _finalize_show(self, w_list: List[Any]) -> None:
         focus_position = self.model.get_focus_in_current_narrow()
