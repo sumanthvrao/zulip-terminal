@@ -85,20 +85,12 @@ class Controller:
         self.loop.draw_screen()
 
     def show_help(self) -> None:
-        double_lines = dict(tlcorner='╔', tline='═', trcorner='╗',
-                            rline='║', lline='║',
-                            blcorner='╚', bline='═', brcorner='╝')
-        blank_lines = dict(tlcorner=' ', tline=' ', trcorner=' ',
-                            rline=' ', lline=' ',
-                            blcorner=' ', bline=' ', brcorner=' ')
+        double_lines = dict()
         cols, rows = self.loop.screen.get_cols_rows()
         help_view = HelpView(self)
+
         self.loop.widget = urwid.Overlay(
-            urwid.LineBox(
-            urwid.LineBox(help_view,
-                          title="Help Menu (up/down scrolls)",
-                          **double_lines),
-            **blank_lines),
+            help_view,
             self.view,
             align='center',
             valign='middle',
@@ -108,6 +100,7 @@ class Controller:
         )
 
     def exit_help(self) -> None:
+        print('EXIT HELP!', flush=True)
         self.loop.widget = self.view
 
     def search_messages(self, text: str) -> None:
