@@ -64,6 +64,7 @@ class MessageView(urwid.ListBox):
         self.focus_msg = 0
         self.log = ModListWalker(self.main_view())
         self.log.read_message = self.read_message
+        self.no_more_messages = False
         # This Function completely controls the messages
         # shown in the MessageView
         self.model.msg_view = self.log
@@ -114,12 +115,15 @@ class MessageView(urwid.ListBox):
 
         self.old_loading = False
 
-    @asynch
-    def load_new_messages(self, anchor: int) -> None:
+    def load_new_messages(self, anchor: int) -> bool:
         self.new_loading = True
         current_ids = self.model.get_message_ids_in_current_narrow()
         self.model.get_messages(num_before=0, num_after=30, anchor=anchor)
         new_ids = self.model.get_message_ids_in_current_narrow() - current_ids
+        print('new_ids: ', new_ids, flush=True)
+        if new_ids == set():
+            self.new_loading = False
+            return True
         if self.log:
             last_message = self.log[-1].original_widget.message
         else:
@@ -131,6 +135,7 @@ class MessageView(urwid.ListBox):
 
         self.model.controller.update_screen()
         self.new_loading = False
+        return False
 
     def mouse_event(self, size: Any, event: str, button: int, col: int,
                     row: int, focus: Any) -> Any:
@@ -147,15 +152,24 @@ class MessageView(urwid.ListBox):
     def keypress(self, size: Tuple[int, int], key: str) -> str:
         if is_command_key('NEXT_MESSAGE', key) and not self.new_loading:
             try:
-                position = self.log.next_position(self.focus_position)
-                self.set_focus(position, 'above')
-                self.set_focus_valign('middle')
-
-                return key
+                if self.no_more_messages or self.focus_position < len(self.log) - 4:
+                    print('top', flush=True)
+                    position = self.log.next_position(self.focus_position)
+                    self.set_focus(position, 'above')
+                    self.set_focus_valign('middle')
+                    return key
+                else:
+                    if self.focus:
+                        print('bottom', flush=True)
+                        id = self.focus.original_widget.message['id']
+                        self.no_more_messages = self.load_new_messages(id)
+                        print('self.no_more_messages', self.no_more_messages, flush=True)
+                        # if self.no_more_messages:
+                        #     print('HERE?', flush=True)
+                        #     position = self.log.next_position(self.focus_position)
+                        #     self.set_focus(position, 'above')
+                    return key
             except Exception:
-                if self.focus:
-                    id = self.focus.original_widget.message['id']
-                    self.load_new_messages(id)
                 return key
 
         elif is_command_key('PREVIOUS_MESSAGE', key) and not self.old_loading:
