@@ -35,6 +35,7 @@ Index = TypedDict('Index', {
     'edited_messages': Set[int],  # {message_ids, ...}
     'topics': Dict[int, List[str]],  # {topic names, ...}
     'search': Set[int],  # {message_id, ...}
+    'groups': Dict[int, Dict[str, Any]],
     # Downloaded message data
     'messages': Dict[int, Message],  # message_id: Message
 })
@@ -50,6 +51,7 @@ initial_index = Index(
     edited_messages=set(),
     topics=defaultdict(list),
     search=set(),
+    groups=defaultdict(dict),
     messages=defaultdict(dict),
 )
 
@@ -237,6 +239,13 @@ def index_messages(messages: List[Any],
             23423,
             23423,
             ...
+        },
+        'groups': {
+            21 : {
+                'name' : terminal,
+                'members': [7, 201, ...],
+                'description' : ZT core developers
+            }
         },
         'messages': {
             # all the messages mapped to their id

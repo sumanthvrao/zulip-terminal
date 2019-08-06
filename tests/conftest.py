@@ -461,6 +461,7 @@ def empty_index():
         'topic_msg_ids': defaultdict(dict, {}),
         'edited_messages': set(),
         'topics': defaultdict(list),
+        'groups': defaultdict(dict, {}),
         'search': set(),
         'messages': defaultdict(dict, {
             stream_msg_template['id']: stream_msg_template,
