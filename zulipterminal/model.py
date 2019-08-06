@@ -115,6 +115,10 @@ class Model:
          self.pinned_streams, self.unpinned_streams) = stream_data
 
         self.muted_topics = self.initial_data['muted_topics']
+
+        groups = self.initial_data['realm_user_groups']
+        self.group_names_list = self._group_info_from_realm_user_groups(groups)
+
         self.unread_counts = classify_unread_counts(self)
 
         self.fetch_all_topics(workers=5)
@@ -555,6 +559,22 @@ class Model:
                    key=lambda s: s[0].lower())
         )
 
+    def _group_info_from_realm_user_groups(self,
+                                           groups: List[Dict[str, Any]]
+                                           ) -> List[str]:
+        """
+        Stores group information in the index and returns a list of
+        group_names which helps in group typeahead. (Eg: @*terminal*)
+        """
+        for sub_group in groups:
+            self.index['groups'][sub_group['id']] = {
+                key: sub_group[key] for key in sub_group if key != 'id'}
+        user_group_list = [self.index['groups'][group_id]['name']
+                           for group_id in self.index['groups']]
+        # Sort groups for typeahead to work alphabetically
+        sorted(user_group_list)
+        return user_group_list
+
     def update_subscription(self, event: Event) -> None:
         """
         Handle changes in subscription (Eg: muting/unmuting streams)
@@ -831,6 +851,7 @@ class Model:
             'update_message_flags',
             'muted_topics',
             'realm_user',  # Enables cross_realm_bots
+            'realm_user_groups'
         ]
         event_types = list(self.event_actions)
         try:

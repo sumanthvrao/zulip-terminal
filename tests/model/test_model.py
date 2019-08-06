@@ -89,6 +89,7 @@ class TestModel:
             'update_message_flags',
             'muted_topics',
             'realm_user',
+            'realm_user_groups',
         ]
         model.client.register.assert_called_once_with(
                 event_types=event_types,
@@ -530,6 +531,20 @@ class TestModel:
         self.client.register.side_effect = Exception()
         with pytest.raises(Exception):
             model._update_initial_data()
+
+    @pytest.mark.parametrize('name, group_id, members', [
+        ('terminal', 105, [7, 5140, 5914]),
+        ('mobile', 21, [22, 346, 7]),
+        ('integrations', 95, []),
+    ])
+    def test__group_info_from_realm_user_groups(self, model, name, group_id,
+                                                members):
+        groups = [{'members': members, 'name': name, 'id': group_id}]
+        group_names_list = model._group_info_from_realm_user_groups(groups)
+        assert model.index['groups'] == {
+            group_id: {'members': members, 'name': name}}
+        assert group_names_list == [name]
+        model.index['groups'] = {}  # FIXME: Clear model.index['groups']?
 
     def test_get_all_users(self, mocker, initial_data, user_list, user_dict,
                            user_id):
