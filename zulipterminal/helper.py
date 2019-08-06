@@ -413,6 +413,16 @@ def match_stream(stream: Any, text: str) -> bool:
     return False
 
 
+def match_groups(group_name: str, text: str) -> bool:
+    """
+    True if any group name matches with `text` (case insensitive),
+    False otherwise.
+    """
+    if group_name.lower().startswith(text.lower()):
+        return True
+    return False
+
+
 def powerset(iterable: Iterable[Any],
              map_func: Callable[[Any], Any]=set) -> List[Any]:
     """
