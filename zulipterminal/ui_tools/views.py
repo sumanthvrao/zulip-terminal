@@ -405,7 +405,8 @@ class TopicsView(urwid.Frame):
 
 
 class UsersView(urwid.ListBox):
-    def __init__(self, users_btn_list: List[Any]) -> None:
+    def __init__(self, users_btn_list: List[Any], view: Any) -> None:
+        self.view = view
         self.log = urwid.SimpleFocusListWalker(users_btn_list)
         super().__init__(self.log)
 
@@ -608,7 +609,7 @@ class RightColumnView(urwid.Frame):
                     count=unread_count
                 )
             )
-        user_w = UsersView(users_btn_list)
+        user_w = UsersView(users_btn_list, self.view)
         # Donot reset them while searching.
         if reset_default_view_users:
             self.users_btn_list = users_btn_list
@@ -623,7 +624,7 @@ class RightColumnView(urwid.Frame):
         elif is_command_key('GO_BACK', key):
             self.user_search.reset_search_text()
             self.allow_update_user_list = True
-            self.body = UsersView(self.users_btn_list)
+            self.body = UsersView(self.users_btn_list, self.view)
             self.set_body(self.body)
             self.set_focus('body')
             self.view.controller.update_screen()
