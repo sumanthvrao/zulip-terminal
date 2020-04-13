@@ -510,9 +510,9 @@ def canonicalize_color(color: str) -> str:
 def notify(title: str, html_text: str) -> None:
     document = lxml.html.document_fromstring(html_text)
     text = document.text_content()
-    quoted_text = shlex.quote(text)
+    quoted_text = text
 
-    quoted_title = shlex.quote(title)
+    quoted_title = title
 
     command = ""
     if WSL:  # FIXME May no longer work - needs further testing with quotes
